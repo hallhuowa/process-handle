@@ -1,24 +1,22 @@
-import logo from './logo.svg';
-import './App.css';
-
+import {BrowserRouter,Routes,Route} from 'react-router-dom';
+import {message} from 'antd';
+//导入页面组件
+import Login from "./views/Login/Login";
+import Layout from "./views/Layout/Layout";
+import Role from "./views/Role/Role";
+import User from "./views/User/User";
+export const successCode = '0000'
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <BrowserRouter>
+      <Routes>
+          <Route path='/' element={<Login/>} />
+          <Route path='/layout' element={<Layout/>}>
+              <Route path='role' element={<Role/>} />
+              <Route path='user' element={<User/>} />
+          </Route>
+      </Routes>
+    </BrowserRouter>
   );
 }
 

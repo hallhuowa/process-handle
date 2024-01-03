@@ -1,0 +1,28 @@
+.login{
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: self-start;
+  padding-top: 200px;
+  background-image: url('../../static/bg-img.jpg');
+  background-size: cover;
+  .content{
+    width: 550px;
+    background-color: #f1f1f1;
+    box-shadow: 10px 10px 5px #525858;
+    border-radius: 4%;
+    h2{
+      text-align: center;
+    }
+  }
+}
+#components-form-demo-normal-login .login-form {
+  max-width: 300px;
+}
+#components-form-demo-normal-login .login-form-forgot {
+  float: right;
+}
+#components-form-demo-normal-login .login-form-button {
+  width: 100%;
+}
