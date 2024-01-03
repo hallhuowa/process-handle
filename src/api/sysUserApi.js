@@ -26,3 +26,8 @@ export const $userPage = async (params)=>{ //$为个人习惯 表示是api接口
     let {data} = await getResponse(basePath+'page?'+params)
     return data;
 }
+
+export const $addUser = async (params)=>{ //$为个人习惯 表示是api接口
+    let {data} = await postResponse(basePath+'add',params)
+    return data;
+}

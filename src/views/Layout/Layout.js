@@ -28,6 +28,8 @@ export default function logout() {
             $getUserInfo().then((values) => {
                 if(values["code"]!==successCode){
                     setMsg({type: 'error', description: values["msg"]})
+                    sessionStorage.clear();
+                    localStorage.clear();
                     setTimeout(function (){
                         navigate('/')
                     },2000)

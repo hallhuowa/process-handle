@@ -1,12 +1,12 @@
 import axios from "axios";
 import {baseURL} from '../config'
-import * as QS from "jest-matcher-utils";
+import {useNavigate} from "react-router-dom";
+import {useState} from "react";
 
 let instance = axios.create({
     baseURL: baseURL,
     timeout: 5000
 });
-
 // 添加请求拦截器
 instance.interceptors.request.use(function (config) {
     // 在发送请求之前做些什么
@@ -26,14 +26,6 @@ instance.interceptors.response.use(function (response) {
 }, function (error) {
     // 对响应错误做点什么
     console.log("response error :"+error);
-    alert(123)
-    if (error.response) {
-        switch (error.response.status) {
-            case 401:
-                console.log("token 过期");
-                return;
-        }
-    }
     return Promise.reject(error);
 });
 
