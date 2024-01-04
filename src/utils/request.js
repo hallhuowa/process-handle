@@ -50,5 +50,21 @@ export function getResponse(url, params){
 export function postResponse(url, params) {
     return axios.post(baseURL+url, params,{headers:{'token': sessionStorage.getItem("token")}});
 }
+/**
+ * post方法，对应post请求
+ * @param {String} url [请求的url地址]
+ * @param {Object} params [请求时携带的参数]
+ */
+export function deleteResponse(url, params) {
+    return axios.delete(baseURL+url,{headers:{'token': sessionStorage.getItem("token")}});
+}
 
+/**
+ * post方法，对应post请求
+ * @param {String} url [请求的url地址]
+ * @param {Object} params [请求时携带的参数]
+ */
+export function putResponse(url, params) {
+    return axios.put(baseURL+url,params,{headers:{'token': sessionStorage.getItem("token")}});
+}
 export default instance

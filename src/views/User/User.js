@@ -1,4 +1,4 @@
-import {$addUser, $getPublicKey, $userPage} from "../../api/sysUserApi";
+import {$addUser, $changeStatus, $deleteUser, $getPublicKey, $userList} from "../../api/sysUserApi";
 import React, {useEffect, useState} from 'react';
 import {Button, Table, Col, Drawer, Form, Input, Row, Space} from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
@@ -36,19 +36,35 @@ export default function User() {
             setMsg({type: 'info', description: '新增成功'})
             setOpen(false);
             form.resetFields();
+            getUserList()
         }
     };
 
-    async function getUserPage(pageSize = 10, pageNo = 1, name = '') {
-        let params = "pageSize=" + pageSize + "&pageNo=" + pageNo + "&name=" + name
-        let {code, data, msg} = await $userPage(params);
-        if(code==='0000'){
-            return data["records"]
+    const deleteById = async (id) => {
+        let params = "id=" + id
+        let {code, msg, data} = await $deleteUser(params)
+        if (code !== successCode) {//如果失败 重新加载验证码
+            setMsg({type: 'error', description: msg})
+        }else{
+            setMsg({type: 'info', description: '删除成功'})
+            getUserList()
         }
-    }
+    };
 
-    useEffect(() => {
-        getUserPage().then(data=>{
+    const changeStatus = async (params) => {
+        let {code, msg, data} = await $changeStatus(params)
+        if (code !== successCode) {//如果失败 重新加载验证码
+            setMsg({type: 'error', description: msg})
+        }else{
+            setMsg({type: 'info', description: '更改成功！'})
+            getUserList()
+        }
+    };
+
+    async function getUserList(name = '') {
+        let params = "name=" + name
+        let {code, data, msg} = await $userList(params);
+        if(code==='0000'){
             if(data){
                 data = data.map(r=>{
                     return{
@@ -58,7 +74,11 @@ export default function User() {
                 })
                 setUserList(data)
             }
-        })
+        }
+    }
+
+    useEffect(() => {
+        getUserList()
     }, [])
     const columns = [
         {
@@ -70,12 +90,16 @@ export default function User() {
             dataIndex: 'userName',
         },
         {
+            title: '邮箱',
+            dataIndex: 'email',
+        },
+        {
             title: '操作',
             key: 'action',
             render: (_, record) => (
                 <Space size="middle">
-                    <a>Invite {record.name}</a>
-                    <a>Delete</a>
+                    <a onClick={()=>{changeStatus(record)}}>{record.online==='1'?'禁用':'启用'}</a>
+                    <a onClick={()=>{deleteById(record.id)}}>Delete</a>
                 </Space>
             ),
         }
@@ -96,8 +120,7 @@ export default function User() {
                 key: 'odd',
                 text: 'Select Odd Row',
                 onSelect: (changeableRowKeys) => {
-                    let newSelectedRowKeys = [];
-                    newSelectedRowKeys = changeableRowKeys.filter((_, index) => {
+                    let newSelectedRowKeys = changeableRowKeys.filter((_, index) => {
                         return index % 2 === 0;
 
                     });
@@ -108,8 +131,7 @@ export default function User() {
                 key: 'even',
                 text: 'Select Even Row',
                 onSelect: (changeableRowKeys) => {
-                    let newSelectedRowKeys = [];
-                    newSelectedRowKeys = changeableRowKeys.filter((_, index) => {
+                    let newSelectedRowKeys = changeableRowKeys.filter((_, index) => {
                         return index % 2 !== 0;
 
                     });
@@ -182,6 +204,14 @@ export default function User() {
                                 hidden
                             >
                                 <Input />
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item
+                                name="email"
+                                label="Email"
+                            >
+                                <Input placeholder="Please enter user email" />
                             </Form.Item>
                         </Col>
                     </Row>
