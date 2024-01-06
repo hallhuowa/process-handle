@@ -1,7 +1,5 @@
 import axios from "axios";
 import {baseURL} from '../config'
-import {useNavigate} from "react-router-dom";
-import {useState} from "react";
 
 let instance = axios.create({
     baseURL: baseURL,
@@ -31,8 +29,8 @@ instance.interceptors.response.use(function (response) {
 
 /**
  * get方法，对应get请求
- * @param {String} url [请求的url地址]
- * @param {Object} params [请求时携带的参数]
+ * @param url
+ * @param params
  */
 export function getResponse(url, params){
     return axios.get(baseURL+url, {
@@ -44,27 +42,25 @@ export function getResponse(url, params){
 }
 /**
  * post方法，对应post请求
- * @param {String} url [请求的url地址]
- * @param {Object} params [请求时携带的参数]
+ * @param url
+ * @param params
  */
 export function postResponse(url, params) {
     return axios.post(baseURL+url, params,{headers:{'token': sessionStorage.getItem("token")}});
 }
 /**
  * post方法，对应post请求
- * @param {String} url [请求的url地址]
- * @param {Object} params [请求时携带的参数]
+ * @param url
  */
-export function deleteResponse(url, params) {
+export function deleteResponse(url) {
     return axios.delete(baseURL+url,{headers:{'token': sessionStorage.getItem("token")}});
 }
 
 /**
  * post方法，对应post请求
- * @param {String} url [请求的url地址]
- * @param {Object} params [请求时携带的参数]
+ * @param url
+ * @param params
  */
 export function putResponse(url, params) {
     return axios.put(baseURL+url,params,{headers:{'token': sessionStorage.getItem("token")}});
 }
-export default instance

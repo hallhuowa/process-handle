@@ -6,7 +6,7 @@ import {
     UserOutlined,
     MailOutlined,
     SettingOutlined,
-    HomeOutlined, ExclamationCircleOutlined
+    HomeOutlined, ExclamationCircleOutlined, ControlOutlined, FundOutlined
 } from '@ant-design/icons';
 import { Layout, Menu, Button,Modal} from 'antd';
 import './Layout.scss'
@@ -15,7 +15,7 @@ import {$getUserInfo} from "../../api/sysUserApi";
 import {successCode} from "../../App";
 import NotificationMsg from "../../components/notification/notificationMsg";
 const { Header, Sider, Content } = Layout;
-export default function logout() {
+export default function () {
     let navigate = useNavigate();
     let [msg,setMsg] = useState({type:'',description:''})
     useEffect(() => {//如果获取用户信息失败 直接跳转到登录页
@@ -92,13 +92,25 @@ export default function logout() {
                     label: '部门管理',
                 }
             ]
+        },
+        {
+            key: 'processOption',
+            icon: <ControlOutlined />,
+            label: '流程管理',
+            children:[
+                {
+                    key: 'process',
+                    icon: <FundOutlined />,
+                    label: '流程管理',
+                }
+            ]
         }
     ]
     const [modal, contextHolder] = Modal.useModal();
     const clickMenu = (e)=>{
         setCurrent(e.key);
         switch (e.key){
-            case 'logout':
+            case 'logout'://如果是退出 清除缓存 跳转到首页
                 modal.confirm({
                     title: 'Confirm',
                     icon: <ExclamationCircleOutlined />,
@@ -121,9 +133,9 @@ export default function logout() {
             case 'user':
                 navigate('/layout/user')
                 break;
-        }
-        if(e.key==='logout'){//如果是退出 清除缓存 跳转到首页
-
+            case 'process':
+                navigate('/layout/process')
+                break;
         }
     }
     const [collapsed, setCollapsed] = useState(false);

@@ -1,64 +1,44 @@
-import {$addUser, $changeStatus, $deleteUser, $getPublicKey, $userList} from "../../api/sysUserApi";
 import React, {useEffect, useState} from 'react';
-import {Button, Table, Col, Drawer, Form, Input, Row, Space, Modal} from 'antd';
-import {ExclamationCircleOutlined, PlusOutlined} from '@ant-design/icons';
-import JSEncrypt from "jsencrypt";
+import {Button, Col, Drawer, Form, Input, Row, Select, Space, Table} from "antd";
 import {successCode} from "../../App";
 import NotificationMsg from "../../components/notification/notificationMsg";
+import {PlusOutlined} from "@ant-design/icons";
+import {$processList} from "../../api/processApi";
+import {$enum} from "../../api/enumApi";
 
-export default function () {
+export default function process() {
     let [msg,setMsg] = useState({type:'',description:''})
-    const [modal, contextHolder] = Modal.useModal();
-    const [userList, setUserList] = useState([]);
-    const [open, setOpen] = useState(false);//打开新增用户抽屉
+    const [processList, setProcessList] = useState([]);
+    const [processType, setProcessType] = useState([]);
+    const [open, setOpen] = useState(false);//打开新建流程抽屉
     let [form] = Form.useForm();
-    const encrypt = new JSEncrypt();
     const showDrawer = () => {
         setOpen(true);
-        $getPublicKey()
-            .then((publicKey) => {
-                encrypt.setPublicKey(publicKey);
-                form.setFieldsValue({'publicKey' : publicKey})
-            })
     };
     const onClose = () => {
         setOpen(false);
     };
-    const addUser = async (values) => {
-        if (!values["password"]) {//如果没输入密码
-            values["password"] = '88888888'
-        }
-        encrypt.setPublicKey(values["publicKey"]);
-        values["password"] = encrypt.encrypt(values["password"])
-        let {code, msg, data} = await $addUser(values)
-        if (code !== successCode) {//如果失败 重新加载验证码
+    const addProcess = async (values) => {
+        let {code, msg, data} = await $addProcess(values)
+        if (code !== successCode) {//如果失败
             setMsg({type: 'error', description: msg})
         }else{
             setMsg({type: 'info', description: '新增成功'})
             setOpen(false);
             form.resetFields();
-            getUserList()
+            getProcessList()
         }
     };
 
-    const deleteById = async (id,nickName) => {
-        modal.confirm({
-            title: 'Confirm',
-            icon: <ExclamationCircleOutlined />,
-            content: '确认删除'+nickName+'？',
-            okText: '确认',
-            cancelText: '取消',
-            async onOk() {
-                let params = "id=" + id
-                let {code, msg, data} = await $deleteUser(params)
-                if (code !== successCode) {//如果失败 重新加载验证码
-                    setMsg({type: 'error', description: msg})
-                } else {
-                    setMsg({type: 'info', description: '删除成功'})
-                    getUserList()
-                }
-            }
-        });
+    const deleteById = async (id) => {
+        let params = "id=" + id
+        let {code, msg, data} = await $deleteProcess(params)
+        if (code !== successCode) {//如果失败 重新加载验证码
+            setMsg({type: 'error', description: msg})
+        }else{
+            setMsg({type: 'info', description: '删除成功'})
+            getProcessList()
+        }
     };
 
     const changeStatus = async (params) => {
@@ -67,13 +47,13 @@ export default function () {
             setMsg({type: 'error', description: msg})
         }else{
             setMsg({type: 'info', description: '更改成功！'})
-            getUserList()
+            getProcessList()
         }
     };
 
-    async function getUserList(name = '') {
+    async function getProcessList(name = '') {
         let params = "name=" + name
-        let {code, data, msg} = await $userList(params);
+        let {code, data, msg} = await $processList(params);
         if(code==='0000'){
             if(data){
                 data = data.map(r=>{
@@ -82,13 +62,27 @@ export default function () {
                         key:r.id //这种写法可以自定义加工数据 推荐
                     }
                 })
-                setUserList(data)
+                setProcessList(data)
             }
+        }
+    }
+    async function getEnumInfo(name = '') {
+        let data = await $enum(name)
+        if(data){
+            data = data.map(r=>{
+                return{
+                    label:r.name,
+                    value:r.code
+                }
+            })
+            setProcessType(data)
         }
     }
 
     useEffect(() => {
-        getUserList()
+        getProcessList()
+        getEnumInfo("processType")
+
     }, [])
     const columns = [
         {
@@ -109,7 +103,7 @@ export default function () {
             render: (_, record) => (
                 <Space size="middle">
                     <a onClick={()=>{changeStatus(record)}}>{record.online==='1'?'禁用':'启用'}</a>
-                    <a onClick={()=>{deleteById(record.id,record.nickName)}}>Delete</a>
+                    <a onClick={()=>{deleteById(record.id)}}>Delete</a>
                 </Space>
             ),
         }
@@ -150,18 +144,20 @@ export default function () {
             },
         ]
     }
+    const handleChange = (value) => {
+        console.log(`selected ${value}`);
+    };
     return (
         <>
             <NotificationMsg msg={msg} />
-            {contextHolder}
             <div className='search'>
                 <Button type="primary" onClick={showDrawer} icon={<PlusOutlined />}>
-                    新增用户
+                    新建流程
                 </Button>
             </div>
-            <Table rowSelection={rowSelection} columns={columns} dataSource={userList} />
+            <Table rowSelection={rowSelection} columns={columns} dataSource={processList} />
             <Drawer
-                title="新增用户"
+                title="新建流程"
                 width={720}
                 onClose={onClose}
                 open={open}
@@ -171,16 +167,16 @@ export default function () {
                     },
                 }}
             >
-                <Form layout="vertical" form={form} onFinish={addUser} requiredMark>
+                <Form layout="vertical" form={form} onFinish={addProcess} requiredMark>
                     <Row gutter={16}>
                         <Col span={12}>
                             <Form.Item
-                                name="nickName"
-                                label="NickName"
+                                name="name"
+                                label="流程名称"
                                 rules={[
                                     {
                                         required: true,
-                                        message: '请输入用户昵称',
+                                        message: '请输入流程名称',
                                     },
                                 ]}
                             >
@@ -189,16 +185,23 @@ export default function () {
                         </Col>
                         <Col span={12}>
                             <Form.Item
-                                name="userName"
-                                label="UserName"
+                                name="processType"
+                                label="流程类型"
                                 rules={[
                                     {
                                         required: true,
-                                        message: '请输入用户登录名称',
+                                        message: '流程类型不能为空',
                                     },
                                 ]}
                             >
-                                <Input placeholder="Please enter user name" />
+                                <Select
+                                    style={{
+                                        width: 120,
+                                    }}
+                                    allowClear
+                                    onChange={handleChange}
+                                    options={processType}
+                                />
                             </Form.Item>
                         </Col>
                     </Row>
@@ -236,4 +239,4 @@ export default function () {
             </Drawer>
         </>
     )
-}
+};
