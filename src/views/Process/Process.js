@@ -3,9 +3,8 @@ import {Button, Col, Drawer, Form, Input, InputNumber, Modal, Popconfirm, Row, S
 import {successCode} from "../../App";
 import NotificationMsg from "../../components/notification/notificationMsg";
 import {ExclamationCircleOutlined, PlusOutlined} from "@ant-design/icons";
-import {$addProcess, $changeStatus, $deleteProcess, $processList} from "../../api/processApi";
+import {$addProcess, $changeStatus, $deleteProcess, $findById, $processList} from "../../api/processApi";
 import {$enum} from "../../api/enumApi";
-import {$deleteUser} from "../../api/sysUserApi";
 
 export default function process() {
     let [msg,setMsg] = useState({type:'',description:''})
@@ -14,7 +13,8 @@ export default function process() {
     const [nodeList, setNodeList] = useState([]);//流程节点列表
     const [open, setOpen] = useState(false);//打开新建流程抽屉
     const [modal, contextHolder] = Modal.useModal();
-    const [roleList, setRoleList] = useState([]);//流程可添加角色列表
+    const [roleList, setRoleList] = useState([]);//流程可添加角色列表;
+    const [processInfo, setProcessInfo] = useState([]);//流程详情
     let [countNode, setCountNode] = useState(0);//流程可添加角色列表
     const isAutoList = [{
         "label":"是",
@@ -33,11 +33,20 @@ export default function process() {
     }, [])
     const showDrawer = () => {
         setOpen(true);
+        setCountNode(0)
+        setNodeList([])
+        form.setFieldsValue({
+            'id' : "",
+            'name' : "",
+            'processType' : "",
+            'autoHour' : ""
+        })
     };
     const onClose = () => {
-        setOpen(false);
+        console.log(form.getFieldsValue(true))
+        //setOpen(false);
     };
-    const addProcess = async () => {
+    const addProcess = async () => {//提交按钮
         let {code, msg, data} = await $addProcess(form.getFieldsValue())
         if (code !== successCode) {//如果失败
             setMsg({type: 'error', description: msg})
@@ -48,7 +57,27 @@ export default function process() {
             getProcessList()
         }
     };
-
+    const edit = async (id)=>{//点击edit按钮
+        let {code, msg, data} = await $findById(id)
+        if (code !== successCode) {//如果失败
+            setMsg({type: 'error', description: msg})
+        }else{
+            setProcessInfo(data);
+            form.setFieldsValue({
+                'id' : data[0]["id"],
+                'name' : data[0]["name"],
+                'processType' : {"label":data[0]["processTypeStr"],"key":data[0]["processType"]},
+                'autoHour' : data[0]["autoHour"]
+            })
+            setNodeList([]);
+            for(let i = 0;i < data.length;i++){
+                nodeList.push({'key':i+1,'roleList':{"label":data[i]["roleListOutStr"],"value":data[i]["roleListOut"]},'isAuto':[{"label":data[i]["isAutoOutStr"],"value":data[i]["isAutoOut"]}]})
+            }
+            setCountNode(data.length);
+            setNodeList(nodeList);
+            setOpen(true);
+        }
+    }
     const deleteById = async (id,name) => {
         let params = "id=" + id
         let {code, msg, data} = await $deleteProcess(params)
@@ -68,7 +97,7 @@ export default function process() {
     const addNode = async () => {
         let count = countNode
         count++
-        let addNodes = {"key":count,"roleList":"","isAuto":""}
+        let addNodes = {"key":count,"roleList":"","isAuto":{"label":"是","value":"1"}}
         setNodeList([...nodeList, addNodes]);
         setCountNode(count);
     };
@@ -130,7 +159,7 @@ export default function process() {
         },
         {
             title: '流程类型',
-            dataIndex: 'processType',
+            dataIndex: 'processTypeStr',
         },
         {
             title: '自动审批时间',
@@ -141,7 +170,10 @@ export default function process() {
             key: 'action',
             render: (_, record) => (
                 <Space size="middle">
-                    <a onClick={()=>{changeStatus(record)}}>{record.online==='1'?'禁用':'启用'}</a>
+                    <a onClick={() => {edit(record.id)}}>编辑</a>
+                    <a onClick={() => {
+                        changeStatus(record)
+                    }}>{record.online === '1' ? '禁用' : '启用'}</a>
                     <Space size="middle">
                         <Popconfirm title="Sure to delete?" onConfirm={() => deleteById(record.id, record.name)}>
                             <a>Delete</a>
@@ -245,7 +277,7 @@ export default function process() {
             </div>
             <Table rowSelection={rowSelection} columns={columns} dataSource={processList} />
             <Drawer
-                title="新建流程"
+                title={processInfo===null?"新建流程":"编辑流程"}
                 width={720}
                 onClose={onClose}
                 open={open}

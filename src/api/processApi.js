@@ -21,3 +21,8 @@ export const $deleteProcess = async (params)=>{ //$为个人习惯 表示是api�
     let {data} = await deleteResponse(basePath+'deleteById?'+params)
     return data;
 }
+
+export const $findById = async (params)=>{ //$为个人习惯 表示是api接口
+    let {data} = await getResponse(basePath+'findById/'+params)
+    return data;
+}
