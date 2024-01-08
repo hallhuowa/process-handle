@@ -1,4 +1,12 @@
-import {$addUser, $changeStatus, $deleteUser, $getPublicKey, $userList} from "../../api/sysUserApi";
+import {
+    $addUser,
+    $changeStatus,
+    $deleteUser,
+    $findById,
+    $getPublicKey,
+    $updateUser,
+    $userList
+} from "../../api/sysUserApi";
 import React, {useEffect, useState} from 'react';
 import {Button, Table, Col, Drawer, Form, Input, Row, Space, Modal} from 'antd';
 import {ExclamationCircleOutlined, PlusOutlined} from '@ant-design/icons';
@@ -11,34 +19,68 @@ export default function () {
     const [modal, contextHolder] = Modal.useModal();
     const [userList, setUserList] = useState([]);
     const [open, setOpen] = useState(false);//打开新增用户抽屉
+    const [userInfo, setUserInfo] = useState({});//打开新增用户抽屉
     let [form] = Form.useForm();
     const encrypt = new JSEncrypt();
     const showDrawer = () => {
         setOpen(true);
+        setUserInfo(null)//新增把暂存的用户置空
+        form.setFieldsValue({
+            'nickName' : "",
+            'userName' : "",
+            'password' : "",
+            'email' : ""
+        })
         $getPublicKey()
             .then((publicKey) => {
                 encrypt.setPublicKey(publicKey);
                 form.setFieldsValue({'publicKey' : publicKey})
             })
     };
+    const edit = async (id)=>{
+        $findById(id).then((result) => {
+            setUserInfo(result["data"])
+            form.setFieldsValue({
+                'id' : result["data"]["id"],
+                'nickName' : result["data"]["nickName"],
+                'userName' : result["data"]["userName"],
+                'password' : "",
+                'email' : result["data"]["email"]
+            })
+        })
+        setOpen(true);
+    }
     const onClose = () => {
         setOpen(false);
     };
-    const addUser = async (values) => {
-        if (!values["password"]) {//如果没输入密码
-            values["password"] = '88888888'
+    const submitUser = async (values) => {
+        if(userInfo===null){//新增
+            if (!values["password"]) {//如果没输入密码
+                values["password"] = '88888888'
+            }
+            encrypt.setPublicKey(values["publicKey"]);
+            values["password"] = encrypt.encrypt(values["password"])
+            let {code, msg, data} = await $addUser(values)
+            if (code !== successCode) {//如果失败 重新加载验证码
+                setMsg({type: 'error', description: msg})
+            }else{
+                setMsg({type: 'info', description: '新增成功'})
+                setOpen(false);
+                form.resetFields();
+                getUserList()
+            }
+        }else {//更新
+            let {code, msg, data} = await $updateUser(values)
+            if (code !== successCode) {//如果失败 提示失败原因
+                setMsg({type: 'error', description: msg})
+            }else{
+                setMsg({type: 'info', description: '更新成功'})
+                setOpen(false);
+                form.resetFields();
+                getUserList()
+            }
         }
-        encrypt.setPublicKey(values["publicKey"]);
-        values["password"] = encrypt.encrypt(values["password"])
-        let {code, msg, data} = await $addUser(values)
-        if (code !== successCode) {//如果失败 重新加载验证码
-            setMsg({type: 'error', description: msg})
-        }else{
-            setMsg({type: 'info', description: '新增成功'})
-            setOpen(false);
-            form.resetFields();
-            getUserList()
-        }
+
     };
 
     const deleteById = async (id,nickName) => {
@@ -108,6 +150,7 @@ export default function () {
             key: 'action',
             render: (_, record) => (
                 <Space size="middle">
+                    <a onClick={()=>{edit(record.id)}}>编辑</a>
                     <a onClick={()=>{changeStatus(record)}}>{record.online==='1'?'禁用':'启用'}</a>
                     <a onClick={()=>{deleteById(record.id,record.nickName)}}>Delete</a>
                 </Space>
@@ -161,7 +204,7 @@ export default function () {
             </div>
             <Table rowSelection={rowSelection} columns={columns} dataSource={userList} />
             <Drawer
-                title="新增用户"
+                title={userInfo===null?"新增用户":"编辑用户"}
                 width={720}
                 onClose={onClose}
                 open={open}
@@ -171,7 +214,7 @@ export default function () {
                     },
                 }}
             >
-                <Form layout="vertical" form={form} onFinish={addUser} requiredMark>
+                <Form layout="vertical" form={form} onFinish={submitUser} requiredMark>
                     <Row gutter={16}>
                         <Col span={12}>
                             <Form.Item
@@ -208,10 +251,16 @@ export default function () {
                                 name="password"
                                 label="Password"
                             >
-                                <Input.Password placeholder="可不输入,默认8个8"/>
+                                <Input.Password disabled={userInfo !== null} placeholder="可不输入,默认8个8"/>
                             </Form.Item>
                             <Form.Item
                                 name = "publicKey"
+                                hidden
+                            >
+                                <Input />
+                            </Form.Item>
+                            <Form.Item
+                                name = "id"
                                 hidden
                             >
                                 <Input />

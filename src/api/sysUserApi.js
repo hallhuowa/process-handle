@@ -46,3 +46,13 @@ export const $changeStatus = async (params)=>{ //$为个人习惯 表示是api�
     let {data} = await putResponse(basePath+'changeStatus',params)
     return data;
 }
+
+export const $findById = async (params)=>{ //$为个人习惯 表示是api接口
+    let {data} = await getResponse(basePath+'findById/'+params)
+    return data;
+}
+
+export const $updateUser = async (params)=>{ //$为个人习惯 表示是api接口
+    let {data} = await putResponse(basePath+'update',params)
+    return data;
+}

@@ -11,3 +11,13 @@ export const $addProcess = async (params)=>{ //$为个人习惯 表示是api接�
     let {data} = await postResponse(basePath+'addProcess',params)
     return data;
 }
+
+export const $changeStatus = async (params)=>{ //$为个人习惯 表示是api接口
+    let {data} = await putResponse(basePath+'changeStatus',params)
+    return data;
+}
+
+export const $deleteProcess = async (params)=>{ //$为个人习惯 表示是api接口
+    let {data} = await deleteResponse(basePath+'deleteById?'+params)
+    return data;
+}

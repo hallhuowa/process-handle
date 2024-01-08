@@ -3,7 +3,7 @@ import {Button, Col, Drawer, Form, Input, InputNumber, Modal, Popconfirm, Row, S
 import {successCode} from "../../App";
 import NotificationMsg from "../../components/notification/notificationMsg";
 import {ExclamationCircleOutlined, PlusOutlined} from "@ant-design/icons";
-import {$addProcess, $processList} from "../../api/processApi";
+import {$addProcess, $changeStatus, $deleteProcess, $processList} from "../../api/processApi";
 import {$enum} from "../../api/enumApi";
 import {$deleteUser} from "../../api/sysUserApi";
 
@@ -50,23 +50,14 @@ export default function process() {
     };
 
     const deleteById = async (id,name) => {
-        modal.confirm({
-            title: 'Confirm',
-            icon: <ExclamationCircleOutlined />,
-            content: '确认删除'+name+'？',
-            okText: '确认',
-            cancelText: '取消',
-            async onOk() {
-                let params = "id=" + id
-                let {code, msg, data} = await $deleteProcess(params)
-                if (code !== successCode) {//如果失败 重新加载验证码
-                    setMsg({type: 'error', description: msg})
-                }else{
-                    setMsg({type: 'info', description: '删除成功'})
-                    getProcessList()
-                }
-            }
-        });
+        let params = "id=" + id
+        let {code, msg, data} = await $deleteProcess(params)
+        if (code !== successCode) {//如果失败
+            setMsg({type: 'error', description: msg})
+        }else{
+            setMsg({type: 'info', description: '删除成功'})
+            getProcessList()
+        }
     };
 
     const deleteNode = async (record) => {
@@ -84,7 +75,7 @@ export default function process() {
 
     const changeStatus = async (params) => {
         let {code, msg, data} = await $changeStatus(params)
-        if (code !== successCode) {//如果失败 重新加载验证码
+        if (code !== successCode) {//如果失败
             setMsg({type: 'error', description: msg})
         }else{
             setMsg({type: 'info', description: '更改成功！'})
@@ -152,11 +143,9 @@ export default function process() {
                 <Space size="middle">
                     <a onClick={()=>{changeStatus(record)}}>{record.online==='1'?'禁用':'启用'}</a>
                     <Space size="middle">
-                        processList.length >= 1 ? (
                         <Popconfirm title="Sure to delete?" onConfirm={() => deleteById(record.id, record.name)}>
                             <a>Delete</a>
                         </Popconfirm>
-                        ) : null
                     </Space>
                 </Space>
             ),
@@ -314,7 +303,7 @@ export default function process() {
                             </Form.Item>
                         </Col>
                     </Row>
-                    <Button onClick={addNode}>新增一行</Button>
+                    <Button onClick={addNode} icon={<PlusOutlined />}>新增一行</Button>
                     <Table columns={nodeColumns} dataSource={nodeList} />
                     <Row>
                         <Button onClick={onClose}>Cancel</Button>
