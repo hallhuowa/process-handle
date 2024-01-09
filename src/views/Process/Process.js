@@ -64,14 +64,17 @@ export default function process() {
             setMsg({type: 'error', description: msg})
         }else{
             setProcessInfo(data);
-            form.setFieldsValue(data[0])
-            /*let addNodes = [];
-            for(let i = 0;i < data.length;i++){
-                form.setFields([{name:['roleList',i],value:data[i]["roleListOut"]}])
-                //let roles = {"label":data[i]["roleListOutStr"],"value":data[i]["roleListOut"]};
-                //addNodes.push({"key":i+1,"roleList":{"label":data[i]["roleListOutStr"],"value":data[i]["roleListOut"]},"isAuto":{"label":"是","value":"1"}})
-            }*/
-            setNodeList(data)
+            form.setFieldsValue(data)
+            const roleArray = Object.keys(data["roleListOut"])
+            const list = []
+            roleArray.forEach((key) => {
+                list.push({roleList:data["roleListOut"][key-1],isAuto:data["isAutoOut"][key-1]})
+            });
+            console.log(list)
+            setNodeList(list)
+            roleArray.forEach((key) => {
+                form.setFields([{name:['roleList',key-1],value:data["roleListOut"][key-1]},{name:['isAuto',key-1],value:data["isAutoOut"][key-1]}])
+            });
             setCountNode(data.length);
             setOpen(true);
         }
