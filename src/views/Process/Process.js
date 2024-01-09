@@ -35,6 +35,7 @@ export default function process() {
         setOpen(true);
         setCountNode(0)
         setNodeList([])
+        setProcessInfo(null)
         form.setFieldsValue({
             'id' : "",
             'name' : "",
@@ -44,7 +45,7 @@ export default function process() {
     };
     const onClose = () => {
         console.log(form.getFieldsValue(true))
-        //setOpen(false);
+        setOpen(false);
     };
     const addProcess = async () => {//提交按钮
         let {code, msg, data} = await $addProcess(form.getFieldsValue())
@@ -66,15 +67,17 @@ export default function process() {
             form.setFieldsValue({
                 'id' : data[0]["id"],
                 'name' : data[0]["name"],
-                'processType' : {"label":data[0]["processTypeStr"],"key":data[0]["processType"]},
-                'autoHour' : data[0]["autoHour"]
+                'autoHour' : data[0]["autoHour"],
+                'processType':{"label":data[0]["processTypeStr"],"value":data[0]["processType"]}
             })
             setNodeList([]);
+            let addNodes = [];
             for(let i = 0;i < data.length;i++){
-                nodeList.push({'key':i+1,'roleList':{"label":data[i]["roleListOutStr"],"value":data[i]["roleListOut"]},'isAuto':[{"label":data[i]["isAutoOutStr"],"value":data[i]["isAutoOut"]}]})
+                //let roles = {"label":data[i]["roleListOutStr"],"value":data[i]["roleListOut"]};
+                addNodes.push({"key":i+1,"roleList":{"label":data[i]["roleListOutStr"],"value":data[i]["roleListOut"]},"isAuto":{"label":"是","value":"1"}})
             }
+            setNodeList(addNodes)
             setCountNode(data.length);
-            setNodeList(nodeList);
             setOpen(true);
         }
     }
@@ -194,9 +197,11 @@ export default function process() {
                                                            message: '请选择审批角色',
                                                        },
                                                    ]}
+                                                   value={record}
                                         >
                                                 <Select mode="multiple"
-                                                      options={roleList}></Select>
+                                                        options={roleList}
+                                                />
                                               </Form.Item>
         },
         {
@@ -287,7 +292,11 @@ export default function process() {
                     },
                 }}
             >
-                <Form layout="vertical" form={form} onFinish={addProcess} requiredMark>
+                <Form layout="vertical"
+                      form={form}
+                      onFinish={addProcess}
+                      requiredMark
+                >
                     <Row gutter={16}>
                         <Col span={12}>
                             <Form.Item
