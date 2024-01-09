@@ -39,7 +39,7 @@ export default function process() {
         form.setFieldsValue({
             'id' : "",
             'name' : "",
-            'processType' : "",
+            processType : "2",
             'autoHour' : ""
         })
     };
@@ -64,19 +64,14 @@ export default function process() {
             setMsg({type: 'error', description: msg})
         }else{
             setProcessInfo(data);
-            form.setFieldsValue({
-                'id' : data[0]["id"],
-                'name' : data[0]["name"],
-                'autoHour' : data[0]["autoHour"],
-                'processType':{"label":data[0]["processTypeStr"],"value":data[0]["processType"]}
-            })
-            setNodeList([]);
-            let addNodes = [];
+            form.setFieldsValue(data[0])
+            /*let addNodes = [];
             for(let i = 0;i < data.length;i++){
+                form.setFields([{name:['roleList',i],value:data[i]["roleListOut"]}])
                 //let roles = {"label":data[i]["roleListOutStr"],"value":data[i]["roleListOut"]};
-                addNodes.push({"key":i+1,"roleList":{"label":data[i]["roleListOutStr"],"value":data[i]["roleListOut"]},"isAuto":{"label":"是","value":"1"}})
-            }
-            setNodeList(addNodes)
+                //addNodes.push({"key":i+1,"roleList":{"label":data[i]["roleListOutStr"],"value":data[i]["roleListOut"]},"isAuto":{"label":"是","value":"1"}})
+            }*/
+            setNodeList(data)
             setCountNode(data.length);
             setOpen(true);
         }
