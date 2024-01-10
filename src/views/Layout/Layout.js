@@ -87,7 +87,7 @@ export default function () {
                     label: '角色管理',
                 },
                 {
-                    key: 'department',
+                    key: 'dept',
                     icon: <UserOutlined />,
                     label: '部门管理',
                 }
@@ -135,6 +135,9 @@ export default function () {
                 break;
             case 'process':
                 navigate('/layout/process')
+                break;
+            case 'dept':
+                navigate('/layout/dept')
                 break;
         }
     }

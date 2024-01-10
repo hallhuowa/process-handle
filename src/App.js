@@ -5,6 +5,7 @@ import Layout from "./views/Layout/Layout";
 import Role from "./views/Role/Role";
 import User from "./views/User/User";
 import Process from "./views/Process/Process";
+import Dept from "./views/Dept/Dept";
 export const successCode = '0000'
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
               <Route path='role' element={<Role/>} />
               <Route path='user' element={<User/>} />
               <Route path='process' element={<Process/>} />
+              <Route path='dept' element={<Dept/>} />
           </Route>
       </Routes>
     </BrowserRouter>
