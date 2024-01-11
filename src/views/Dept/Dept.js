@@ -6,10 +6,10 @@ import {
     EditOutlined,
     PlusOutlined,
     MinusOutlined,
-    CloseOutlined,
-    CheckOutlined,
+    ExclamationCircleOutlined
 } from '@ant-design/icons';
-import {$addProcess} from "../../api/processApi";
+import {$addDept, $deleteDept, $deptList, $updateDept} from "../../api/deptApi";
+import {$deleteUser} from "../../api/sysUserApi";
 
 export default function () {
     let [msg,setMsg] = useState({type:'',description:''})
@@ -17,56 +17,81 @@ export default function () {
     const [open, setOpen] = useState(false);//打开新增用户抽屉
     const [deptList, setDeptList] = useState([]);//打开新增用户抽屉
     const [node, setNode] = useState([]);//选中的节点
-    const treeData = [
-        {
-            title: 'parent 1',
-            key: '0-0',
-            multiple:false,
-            children: [
-                {
-                    title: 'parent 1-0',
-                    key: '0-0-0',
-                    children: [
-                        {
-                            title: 'leaf',
-                            key: '0-0-0-0',
-                        },
-                        {
-                            title: 'leaf',
-                            key: '0-0-0-1',
-                        },
-                    ],
-                },
-                {
-                    title: 'parent 1-1',
-                    key: '0-0-1',
-                    children: [
-                        {
-                            title: (
-                                <span
-                                    style={{
-                                        color: '#1677ff',
-                                    }}
-                                >
-                sss
-              </span>
-                            ),
-                            key: '0-0-1-0',
-                        },
-                    ],
-                },
-            ],
-        },
-    ];
+    const [nodeTitle, setNodeTitle] = useState([]);//选中的节点
+    const [parent, setParent] = useState([]);//选中的节点
+    const [children, setChildren] = useState([]);//选中的节点
+    const [treeData, setTreeData]= useState([])
+    useEffect(() => {
+        getTreeData()
+    }, [])
+    async function getTreeData(name = '') {
+        let params = "name=" + name
+        let {code, data, msg} = await $deptList(params);
+        if(code==='0000'){
+            if(data){
+                setTreeData(data)
+            }
+        }
+    }
     let [form] = Form.useForm();
     const onSelect = (selectedKeys, info) => {
-        console.log('selected', selectedKeys, info);
         setNode(selectedKeys)
+        setNodeTitle(info["node"]['title'])
+        setParent(info["node"]['parent'])
+        setChildren(info["node"]['children'])
+        console.log('select',info)
     };
-    const showDrawer = (key) => {
-        if(node.length===0){
+    const showDrawer = async (key) => {
+        if (node.length === 0) {
             setMsg({type: 'error', description: '请选择一个节点后重试！'})
             return
+        }
+        if (key === 'add') {//新增
+            form.setFieldsValue({
+                'id': '',
+                'deptName': '',
+                'parentId': node[0],
+                'parentName': nodeTitle
+            })
+        } else if (key === 'update') {//更新
+            if ('-1' === node[0]) {
+                setMsg({type: 'error', description: '根节点无法编辑！'})
+                return;
+            }
+            form.setFieldsValue({
+                'id': node[0],
+                'deptName': nodeTitle,
+                'parentId': parent,
+                'parentName': getTitle(treeData, parent)
+            })
+        } else if (key === 'delete') {//删除
+            if ('-1' === node[0]) {
+                setMsg({type: 'error', description: '根节点无法删除！'})
+                return;
+            } else if (children !== null) {
+                setMsg({type: 'error', description: '请删除所有子节点后再删除删除！'})
+                return;
+            }
+            modal.confirm({
+                title: 'Confirm',
+                icon: <ExclamationCircleOutlined />,
+                content: '确认删除部门'+nodeTitle+'？',
+                okText: '确认',
+                cancelText: '取消',
+                async onOk() {
+                    let params = "id=" + node[0]
+                    let {code, msg, data} = await $deleteDept(params)
+                    if (code !== successCode) {//如果失败
+                        setMsg({type: 'error', description: msg})
+                    } else {
+                        setMsg({type: 'info', description: '删除成功'})
+                        form.resetFields();
+                        getTreeData()
+                    }
+                    setChildren(null)
+                }
+            });
+            return;
         }
         setOpen(true);
     };
@@ -74,16 +99,48 @@ export default function () {
         setOpen(false);
     };
     const submitDept = async () => {//提交按钮
-        let {code, msg, data} = await $addProcess(form.getFieldsValue())
-        if (code !== successCode) {//如果失败
-            setMsg({type: 'error', description: msg})
-        }else{
-            setMsg({type: 'info', description: '新增成功'})
-            setOpen(false);
-            form.resetFields();
-            getProcessList()
+        if(form.getFieldValue("id")===''){
+            let {code, msg, data} = await $addDept(form.getFieldsValue())
+            if (code !== successCode) {//如果失败
+                setMsg({type: 'error', description: msg})
+            }else{
+                setMsg({type: 'info', description: '新增成功'})
+                setOpen(false);
+                form.resetFields();
+                getTreeData()
+            }
+        }else if(form.getFieldValue("id")){
+            let {code, msg, data} = await $updateDept(form.getFieldsValue())
+            if (code !== successCode) {//如果失败
+                setMsg({type: 'error', description: msg})
+            }else{
+                setMsg({type: 'info', description: '更新成功'})
+                setOpen(false);
+                form.resetFields();
+                getTreeData()
+            }
         }
     };
+    function getTitle(data,key){
+        for(let i = 0; i<data.length; i++){
+            let obj = data[i];
+            if(obj.key === key){
+                return obj.title
+            }else if(obj.children!==null&& obj.children.length > 0){
+                return getTitle(obj.children,key)
+            }
+        }
+    }
+    function changeParent(data,key){
+        if(node[0]===form.getFieldValue("id")){
+            setMsg({type: 'error', description: '父节点与子节点不能相同'})
+            return
+        }
+        form.setFieldsValue({
+            'parentId' : node[0],
+            'parentName' : nodeTitle
+        })
+    }
     return (
         <>
             <NotificationMsg msg={msg}/>
@@ -104,7 +161,7 @@ export default function () {
                 treeData={treeData}
             />
             <Drawer
-                title="节点"
+                title="部门"
                 width={720}
                 onClose={onClose}
                 open={open}
@@ -122,29 +179,43 @@ export default function () {
                     <Row gutter={16}>
                         <Col span={12}>
                             <Form.Item
-                                name="name"
-                                label="流程名称"
+                                name="deptName"
+                                label="部门名称"
                                 rules={[
                                     {
                                         required: true,
-                                        message: '请输入流程名称',
+                                        message: '请输入部门名称',
                                     },
                                 ]}
                             >
-                                <Input placeholder="Please enter nick name" />
+                                <Input placeholder="Please enter dept name" />
                             </Form.Item>
                         </Col>
                         <Col span={12}>
                             <Form.Item
-                                name="processType"
-                                label="流程类型"
-                                rules={[
-                                    {
-                                        required: true,
-                                        message: '流程类型不能为空',
-                                    },
-                                ]}
+                                name="parentName"
+                                label="父级部门"
                             >
+                                <Input disabled={true} placeholder="Please enter parent dept" />
+                            </Form.Item>
+                            <Button onClick={changeParent}>更改父级部门</Button>
+                            <Tree
+                                onSelect={onSelect}
+                                treeData={treeData}
+                            ></Tree>
+                            <Form.Item
+                                name="parentId"
+                                label="父级部门id"
+                                hidden
+                            >
+                                <Input placeholder="Please enter parentId" />
+                            </Form.Item>
+                            <Form.Item
+                                name="id"
+                                label="部门id"
+                                hidden
+                            >
+                                <Input placeholder="Please enter parentId" />
                             </Form.Item>
                         </Col>
                     </Row>
