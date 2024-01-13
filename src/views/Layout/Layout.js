@@ -6,7 +6,7 @@ import {
     UserOutlined,
     MailOutlined,
     SettingOutlined,
-    HomeOutlined, ExclamationCircleOutlined, ControlOutlined, FundOutlined
+    HomeOutlined, ExclamationCircleOutlined, ControlOutlined, FundOutlined,DatabaseOutlined
 } from '@ant-design/icons';
 import { Layout, Menu, Button,Modal} from 'antd';
 import './Layout.scss'
@@ -96,8 +96,13 @@ export default function () {
         {
             key: 'processOption',
             icon: <ControlOutlined />,
-            label: '流程管理',
+            label: '项目管理',
             children:[
+                {
+                    key: 'project',
+                    icon: <DatabaseOutlined />,
+                    label: '项目维护',
+                },
                 {
                     key: 'process',
                     icon: <FundOutlined />,

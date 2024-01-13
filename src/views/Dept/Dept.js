@@ -9,13 +9,11 @@ import {
     ExclamationCircleOutlined
 } from '@ant-design/icons';
 import {$addDept, $deleteDept, $deptList, $updateDept} from "../../api/deptApi";
-import {$deleteUser} from "../../api/sysUserApi";
 
 export default function () {
     let [msg,setMsg] = useState({type:'',description:''})
     const [modal, contextHolder] = Modal.useModal();
     const [open, setOpen] = useState(false);//打开新增用户抽屉
-    const [deptList, setDeptList] = useState([]);//打开新增用户抽屉
     const [node, setNode] = useState([]);//选中的节点
     const [nodeTitle, setNodeTitle] = useState([]);//选中的节点
     const [parent, setParent] = useState([]);//选中的节点
@@ -26,8 +24,8 @@ export default function () {
     }, [])
     async function getTreeData(name = '') {
         let params = "name=" + name
-        let {code, data, msg} = await $deptList(params);
-        if(code==='0000'){
+        let {code, data} = await $deptList(params);
+        if(code===successCode){
             if(data){
                 setTreeData(data)
             }
@@ -41,7 +39,7 @@ export default function () {
         setChildren(info["node"]['children'])
         console.log('select',info)
     };
-    const showDrawer = async (key) => {
+    const operationDept = async (key) => {//操作部门
         if (node.length === 0) {
             setMsg({type: 'error', description: '请选择一个节点后重试！'})
             return
@@ -80,13 +78,13 @@ export default function () {
                 cancelText: '取消',
                 async onOk() {
                     let params = "id=" + node[0]
-                    let {code, msg, data} = await $deleteDept(params)
+                    let {code, msg} = await $deleteDept(params)
                     if (code !== successCode) {//如果失败
                         setMsg({type: 'error', description: msg})
                     } else {
                         setMsg({type: 'info', description: '删除成功'})
                         form.resetFields();
-                        getTreeData()
+                        await getTreeData()
                     }
                     setChildren(null)
                 }
@@ -97,27 +95,28 @@ export default function () {
     };
     const onClose = () => {
         setOpen(false);
+        setNode([])
     };
     const submitDept = async () => {//提交按钮
         if(form.getFieldValue("id")===''){
-            let {code, msg, data} = await $addDept(form.getFieldsValue())
+            let {code, msg} = await $addDept(form.getFieldsValue())
             if (code !== successCode) {//如果失败
                 setMsg({type: 'error', description: msg})
             }else{
                 setMsg({type: 'info', description: '新增成功'})
                 setOpen(false);
                 form.resetFields();
-                getTreeData()
+                await getTreeData()
             }
         }else if(form.getFieldValue("id")){
-            let {code, msg, data} = await $updateDept(form.getFieldsValue())
+            let {code, msg} = await $updateDept(form.getFieldsValue())
             if (code !== successCode) {//如果失败
                 setMsg({type: 'error', description: msg})
             }else{
                 setMsg({type: 'info', description: '更新成功'})
                 setOpen(false);
                 form.resetFields();
-                getTreeData()
+                await getTreeData()
             }
         }
     };
@@ -131,7 +130,7 @@ export default function () {
             }
         }
     }
-    function changeParent(data,key){
+    function changeParent(){
         if(node[0]===form.getFieldValue("id")){
             setMsg({type: 'error', description: '父节点与子节点不能相同'})
             return
@@ -146,13 +145,13 @@ export default function () {
             <NotificationMsg msg={msg}/>
             {contextHolder}
             <div className='search'>
-                <Button type="primary" onClick = {()=>showDrawer('add')} icon={<PlusOutlined/>}>
+                <Button type="primary" onClick = {()=>operationDept('add')} icon={<PlusOutlined/>}>
                     添加子部门
                 </Button>
-                <Button type="primary" onClick = {()=>showDrawer('update')} icon={<EditOutlined />}>
+                <Button type="primary" onClick = {()=>operationDept('update')} icon={<EditOutlined />}>
                     编辑部门
                 </Button>
-                <Button type="primary" onClick = {()=>showDrawer('delete')} icon={<MinusOutlined />}>
+                <Button type="primary" onClick = {()=>operationDept('delete')} icon={<MinusOutlined />}>
                     删除
                 </Button>
             </div>

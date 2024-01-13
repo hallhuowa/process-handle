@@ -8,11 +8,14 @@ import {
     $userList
 } from "../../api/sysUserApi";
 import React, {useEffect, useState} from 'react';
-import {Button, Table, Col, Drawer, Form, Input, Row, Space, Modal} from 'antd';
+import {Button, Table, Col, Drawer, Form, Input, Row, Space, Modal,TreeSelect} from 'antd';
 import {ExclamationCircleOutlined, PlusOutlined} from '@ant-design/icons';
 import JSEncrypt from "jsencrypt";
 import {successCode} from "../../App";
 import NotificationMsg from "../../components/notification/notificationMsg";
+import {getTreeData} from "../Dept/Dept";
+import {$deptList} from "../../api/deptApi";
+import {tree2SelectTree} from "../../utils/common";
 
 export default function () {
     let [msg,setMsg] = useState({type:'',description:''})
@@ -20,15 +23,20 @@ export default function () {
     const [userList, setUserList] = useState([]);
     const [open, setOpen] = useState(false);//打开新增用户抽屉
     const [userInfo, setUserInfo] = useState({});//打开新增用户抽屉
+    const [value, setValue] = useState();//部门
     let [form] = Form.useForm();
     const encrypt = new JSEncrypt();
+    const [treeData, setTreeData]= useState([])
     const showDrawer = () => {
         setOpen(true);
         setUserInfo(null)//新增把暂存的用户置空
         form.setFieldsValue({
+            'id':"",
             'nickName' : "",
             'userName' : "",
             'password' : "",
+            'phone' : "",
+            'dept' : "",
             'email' : ""
         })
         $getPublicKey()
@@ -45,7 +53,10 @@ export default function () {
                 'nickName' : result["data"]["nickName"],
                 'userName' : result["data"]["userName"],
                 'password' : "",
-                'email' : result["data"]["email"]
+                'email' : result["data"]["email"],
+                'phone' : result["data"]["phone"],
+                'dept' : result["data"]["dept"],
+
             })
         })
         setOpen(true);
@@ -130,6 +141,7 @@ export default function () {
     }
 
     useEffect(() => {
+        getTreeData()
         getUserList()
     }, [])
     const columns = [
@@ -140,6 +152,14 @@ export default function () {
         {
             title: '登录名称',
             dataIndex: 'userName',
+        },
+        {
+            title: '电话',
+            dataIndex: 'phone',
+        },
+        {
+            title: '部门',
+            dataIndex: 'deptStr'
         },
         {
             title: '邮箱',
@@ -192,6 +212,24 @@ export default function () {
                 },
             },
         ]
+    }
+    const onChange = (newValue) => {
+        setValue(newValue);
+    };
+    async function getTreeData(name = '') {
+        let params = "name=" + name
+        let {code, data, msg} = await $deptList(params);
+        if(code==='0000'){
+            if(data){
+                setTreeData(tree2SelectTree(data))
+                return tree2SelectTree(data)
+            }
+        }
+    }
+
+    function getText(text){
+        console.log("tree",treeData[text])
+        return treeData[text]
     }
     return (
         <>
@@ -272,6 +310,44 @@ export default function () {
                                 label="Email"
                             >
                                 <Input placeholder="Please enter user email" />
+                            </Form.Item>
+                        </Col>
+                    </Row>
+                    <Row gutter={16}>
+                        <Col span={12}>
+                            <Form.Item
+                                name="phone"
+                                label="Phone"
+                            >
+                                <Input placeholder="Please enter user phone"/>
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item
+                                name="dept"
+                                label="部门"
+                                rules={[
+                                    {
+                                        required: true,
+                                        message: '请选择一个部门',
+                                    },
+                                ]}
+                            >
+                                <TreeSelect
+                                    showSearch
+                                    style={{
+                                        width: '100%',
+                                    }}
+                                    value={value}
+                                    dropdownStyle={{
+                                        maxHeight: 400,
+                                        overflow: 'auto',
+                                    }}
+                                    placeholder="Please select"
+                                    allowClear
+                                    onChange={onChange}
+                                    treeData={treeData}
+                                />
                             </Form.Item>
                         </Col>
                     </Row>
