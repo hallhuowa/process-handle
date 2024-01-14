@@ -144,6 +144,9 @@ export default function () {
             case 'dept':
                 navigate('/layout/dept')
                 break;
+            case 'project':
+                navigate('/layout/project')
+                break;
         }
     }
     const [collapsed, setCollapsed] = useState(false);

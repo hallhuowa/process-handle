@@ -13,7 +13,6 @@ import {ExclamationCircleOutlined, PlusOutlined} from '@ant-design/icons';
 import JSEncrypt from "jsencrypt";
 import {successCode} from "../../App";
 import NotificationMsg from "../../components/notification/notificationMsg";
-import {getTreeData} from "../Dept/Dept";
 import {$deptList} from "../../api/deptApi";
 import {tree2SelectTree} from "../../utils/common";
 

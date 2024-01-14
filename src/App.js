@@ -6,6 +6,7 @@ import Role from "./views/Role/Role";
 import User from "./views/User/User";
 import Process from "./views/Process/Process";
 import Dept from "./views/Dept/Dept";
+import Project from "./views/Project/Project";
 export const successCode = '0000'
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
               <Route path='user' element={<User/>} />
               <Route path='process' element={<Process/>} />
               <Route path='dept' element={<Dept/>} />
+              <Route path='project' element={<Project/>} />
           </Route>
       </Routes>
     </BrowserRouter>
